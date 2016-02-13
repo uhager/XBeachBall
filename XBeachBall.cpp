@@ -10,8 +10,8 @@
 
 
 
-XBeachBall::XBeachBall(std::shared_ptr<XDisplayBase> disp_base, unsigned int step)
-  : display_base(disp_base), step_size(step)
+XBeachBall::XBeachBall(std::shared_ptr<XDisplayBase> disp_base, unsigned int nsectors, unsigned int step)
+  : display_base(disp_base), n_sectors(nsectors), step_size(step)
 {
 #ifdef DEBUG
   std::cout << "[XBeachBall::XBeachBall]" << std::endl;
@@ -48,9 +48,9 @@ XBeachBall::open_window()
   XSelectInput(display_base->xDisplay, ball_window, StructureNotifyMask | ExposureMask|ButtonPressMask);
   XMapWindow(display_base->xDisplay, ball_window);
 
-  for (int i=0; i<8; i++ ){
+  for (unsigned int i=0; i<n_sectors; i++ ){
     XGCValues values;
-    values.foreground = display_base->sectorColour[i];
+    values.foreground = display_base->sectorColour[i%8]; // have to find something better to automatically create colours either in XDisplayBase or here.
     unsigned long valuemask = GCForeground;
     sector_context.push_back( XCreateGC(display_base->xDisplay, ball_window, valuemask, &values) );
     if ( sector_context.back() < 0 )
@@ -63,7 +63,7 @@ XBeachBall::open_window()
 void
 XBeachBall::zero_sectors(){
   sector_count.clear();
-  for (int i =0; i<8; i++)
+  for (unsigned int i =0; i < n_sectors; i++)
     sector_count.push_back(0);
 }
 
@@ -88,7 +88,7 @@ XBeachBall::increase_sector(unsigned int sector) {
 
   sector_count[sector] += step_size;
   for ( unsigned int i = 0; i < sector_count.size(); ++i ) {
-    XFillArc(display_base->xDisplay, ball_window, sector_context[i], (ball_window_attributes.width)/2-sector_count[i], (ball_window_attributes.width)/2-sector_count[i], 2*sector_count[i], 2*sector_count[i], 64*(90+i*45), 45*64);
+    XFillArc(display_base->xDisplay, ball_window, sector_context[i], (ball_window_attributes.width)/2-sector_count[i], (ball_window_attributes.width)/2-sector_count[i], 2*sector_count[i], 2*sector_count[i], 64*(90+i*360/n_sectors), 360/n_sectors*64);
   }
    XFlush(display_base->xDisplay);
 }

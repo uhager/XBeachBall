@@ -15,7 +15,7 @@ class XDisplayBase;
 
 class XBeachBall {
  public:
-  XBeachBall(std::shared_ptr<XDisplayBase> display_base, unsigned int step = 1);
+  XBeachBall(std::shared_ptr<XDisplayBase> display_base, unsigned int nsectors = 8, unsigned int step = 1);
   ~XBeachBall();
   void increase_sector(unsigned int sector);
 
@@ -26,6 +26,7 @@ class XBeachBall {
   void zero_sectors();
 
   std::shared_ptr<XDisplayBase> display_base;
+  unsigned int n_sectors;
   unsigned int step_size;
   Window ball_window;
   std::vector<GC> sector_context;
