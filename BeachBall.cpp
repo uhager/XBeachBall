@@ -14,7 +14,15 @@ std::mutex mex;
 std::condition_variable gdata_available;           
 std::condition_variable gread_finished; 
 
-void producer(int& data)
+
+struct Data
+{
+  int sector = 0;
+  double energy = 0.0;
+};
+
+
+void producer(Data& data)
 {
 #ifdef DEBUG
       std::cout << "[producer] initial data = " << data << std::endl;
@@ -25,7 +33,7 @@ void producer(int& data)
     std::this_thread::sleep_for(std::chrono::milliseconds(80));  // slow down data generation a bit
     {  // The class lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for owning a mutex for the duration of a scoped block. -> {}
       std::lock_guard<std::mutex> lock(mex);
-      data = dist(generator);
+      data.sector = dist(generator);
 #ifdef DEBUG
       std::cout << "[producer] data = " << data << std::endl;
 #endif  // DEBUG
@@ -36,7 +44,7 @@ void producer(int& data)
 }
 
 
-void fill_chart(XBeachBall& beach_ball, const int& data)
+void fill_chart(XBeachBall& beach_ball, const Data& data)
 {
 #ifdef DEBUG
       std::cout << "[fill_chart] initial data = " << data << std::endl;
@@ -47,7 +55,7 @@ void fill_chart(XBeachBall& beach_ball, const int& data)
 #ifdef DEBUG
       std::cout << "[fill_chart] data = " << data << std::endl;
 #endif  // DEBUG
-    beach_ball.increase_sector(data);
+    beach_ball.increase_sector(data.sector);
     gread_finished.notify_one();
   }
 }
@@ -57,7 +65,7 @@ int main()
 {
   std::shared_ptr<XDisplayBase>display_base = std::make_shared<XDisplayBase>();
   XBeachBall beach_ball(display_base, 3);
-  int data = 0;
+  Data data;
   std::thread t1( producer,  std::ref(data) );
   std::thread t2( fill_chart, std::ref(beach_ball), std::cref(data));
 

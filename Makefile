@@ -2,10 +2,10 @@
 ## author: Ulrike Hager
 
 CXX = g++
-CXXFLAGS += -O2 -fPIC -Wall -std=c++11 -I.
+CXXFLAGS += -O2 -fPIC -Wall -std=c++11 -I. 
 DEBUG_FLAGS = -g -DDEBUG 
 
-XLIBS = -lX11 -pthread
+LIBS = -lX11 -pthread
 
 OBJS = XDisplayBase.o XBeachBall.o BeachBall.o
 
@@ -20,7 +20,7 @@ debug: all
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 BeachBall: $(OBJS) 
-	$(CXX) $(CXXFLAGS) $(OBJS) $(XLIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o $@
 
 clean:
 	rm -f *.o  $(OBJS) 
