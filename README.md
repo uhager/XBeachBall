@@ -1,0 +1,1 @@
+Uses X11 to open a window and display hits per sector as a pie chart.
