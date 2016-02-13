@@ -1,38 +1,37 @@
-#ifndef BeachBall_h
-#define BeachBall_h
+#ifndef XDRAWAVERAGES_H
+#define XDRAWAVERAGES_H
 
 #include <vector>
+#include <deque>
 #include <memory>
 
 #include <X11/Xlib.h>
 
 #include "XDisplayBase.h"
-#include "Data.h"
 
 #define PI 3.14159265
 
 class XDisplayBase;
+class Data;
 
-class XBeachBall {
+class XDrawAverages {
  public:
-  XBeachBall(std::shared_ptr<XDisplayBase> display_base, unsigned int nsectors = 8, unsigned int step = 1);
-  ~XBeachBall();
+  XDrawAverages(std::shared_ptr<XDisplayBase> display_base, unsigned int nsectors = 8, unsigned int ave_over = 100);
+  ~XDrawAverages();
   void update(const Data& data);
 
 
  private:
-  void check_size(int counts, int width);
   void open_window();
-  void zero_sectors();
 
   std::shared_ptr<XDisplayBase> display_base;
   unsigned int n_sectors_;
-  unsigned int step_size_;
+  unsigned int average_over_;
   Window window_;
   std::vector<GC> sector_context;
   XWindowAttributes window_attributes_;
-  std::vector<int> sector_count;
-
+  std::vector<double> sums_;
+  std::vector< std::deque<double> > values_;
 };
 
-#endif
+#endif  // XDRAWAVERAGES_H

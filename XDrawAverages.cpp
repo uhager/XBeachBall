@@ -5,44 +5,44 @@
 #include <cmath>
 
 #include "XDisplayBase.h"
+#include "Data.h"
 
-#include "XBeachBall.h"
+#include "XDrawAverages.h"
 
 
 
-XBeachBall::XBeachBall(std::shared_ptr<XDisplayBase> disp_base, unsigned int nsectors, unsigned int step)
-  : display_base(disp_base), n_sectors_(nsectors), step_size_(step)
+XDrawAverages::XDrawAverages(std::shared_ptr<XDisplayBase> disp_base, unsigned int nsectors, unsigned int ave_over)
+  : display_base(disp_base), n_sectors_(nsectors), average_over_(ave_over), sums_(nsectors,0.0), values_(nsectors)
 {
 #ifdef DEBUG
-  std::cout << "[XBeachBall::XBeachBall]" << std::endl;
+  std::cout << "[XDrawAverages::XDrawAverages]" << std::endl;
 #endif // DEBUG
-  zero_sectors();
   open_window();
-  XFlush(display_base->xDisplay);
 }
 
 
-XBeachBall::~XBeachBall() {
+XDrawAverages::~XDrawAverages() {
 #ifdef DEBUG
-  std::cout << "[XBeachBall::~XBeachBall]" << std::endl;
+  std::cout << "[XDrawAverages::~XDrawAverages]" << std::endl;
 #endif // DEBUG
   XDestroyWindow(display_base->xDisplay, window_);
 #ifdef DEBUG
-  std::cout << "[XBeachBall::~XBeachBall] window destroyed" << std::endl;
+  std::cout << "[XDrawAverages::~XDrawAverages] window destroyed" << std::endl;
 #endif // DEBUG
 }
 
 
+
 void
-XBeachBall::open_window()
+XDrawAverages::open_window()
 {
 #ifdef DEBUG
-  std::cout << "[XBeachBall::open_window]" << std::endl;
+  std::cout << "[XDrawAverages::open_window]" << std::endl;
 #endif  // DEBUG
   window_ = XCreateSimpleWindow(display_base->xDisplay,display_base->rootWindow,0, 0, DisplayWidth(display_base->xDisplay, display_base->screenNum)/4, DisplayWidth(display_base->xDisplay, display_base->screenNum)/4, 0,display_base->whiteColour, display_base->whiteColour);
 
   char* window_name = new char[32];
-  std::strcpy(window_name, "BeachBall");
+  std::strcpy(window_name, "Average energies");
   XStoreName(display_base->xDisplay, window_, window_name);
 	  
   XSelectInput(display_base->xDisplay, window_, StructureNotifyMask | ExposureMask|ButtonPressMask);
@@ -56,28 +56,16 @@ XBeachBall::open_window()
     if ( sector_context.back() < 0 )
       std::cerr << "XCreateGC failed" << std::endl;
   }
+   XFlush(display_base->xDisplay);
 }
 
 
 
 void
-XBeachBall::zero_sectors(){
-  sector_count.clear();
-  for (unsigned int i =0; i < n_sectors_; i++)
-    sector_count.push_back(0);
-}
-
-
-void
-XBeachBall::check_size(int counts, int width){
-  if (counts >= width/2) zero_sectors();
-}
-
-
-
-void
-XBeachBall::update(const Data& data) {
-  //  std::cout << "[XBeachBall::increase_sector]" << std::endl;
+XDrawAverages::update(const Data& data) {
+#ifdef DEBUG
+  std::cout << "[XDrawAverages::update] " << data.sector << " - " << data.energy << std::endl;
+#endif // DEBUG
   if ( !window_ )
     open_window();
 
@@ -85,11 +73,22 @@ XBeachBall::update(const Data& data) {
   XGetWindowAttributes(display_base->xDisplay, window_, &window_attributes_);
 
   const unsigned int& sector = data.sector;
-  check_size(sector_count[sector], window_attributes_.width);
-
-  sector_count[sector] += step_size_;
+  const double& energy = data.energy;
+  std::deque<double>& values = values_.at(sector);
+  double& sum = sums_.at(sector);
+  
+  values.push_back(energy);
+  sum += energy;
+  if ( values.size() > average_over_ ) {
+    sum -= values.front();
+    values.pop_front();
+  }
+  
   for ( unsigned int i = 0; i < n_sectors_; ++i ) {
-    XFillArc(display_base->xDisplay, window_, sector_context[i], (window_attributes_.width)/2-sector_count[i], (window_attributes_.width)/2-sector_count[i], 2*sector_count[i], 2*sector_count[i], 64*(90+i*360/n_sectors_), 360/n_sectors_*64);
+    double average = sums_.at(i) / values_.at(i).size();
+    int height = window_attributes_.height / n_sectors_;
+    std::string out_string = "sector " + std::to_string(i) + ": " + std::to_string(average);
+    XDrawString ( display_base->xDisplay , window_, sector_context.at(i), 0, height * i, out_string.c_str(), out_string.size() );
   }
    XFlush(display_base->xDisplay);
 }
