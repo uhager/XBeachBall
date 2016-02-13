@@ -5,7 +5,7 @@ CXX = g++
 CXXFLAGS += -O2 -fPIC -Wall -std=c++11 -I.
 DEBUG_FLAGS = -g -DDEBUG 
 
-XLIBS = -lX11
+XLIBS = -lX11 -pthread
 
 OBJS = XDisplayBase.o XBeachBall.o BeachBall.o
 
