@@ -81,9 +81,11 @@ int main()
 {
   unsigned int sectors = 8;
   std::shared_ptr<XDisplayBase>display_base = std::make_shared<XDisplayBase>();
-  XBeachBall beach_ball(display_base, sectors, 3);
-  XDrawAverages averages(display_base, sectors, 200);
+  XBeachBall beach_ball("Beachball",display_base, 300, 300, sectors);
+  beach_ball.set_step_size(3);
+  XDrawAverages averages("Average Energies",display_base, 300, 200, sectors);
   Data data;
+
   std::thread t1( producer, sectors, std::ref(data) );
   std::thread t2( fill_chart, std::ref(beach_ball), std::cref(data));
   std::thread t3( calculate_averages, std::ref(averages), std::cref(data));

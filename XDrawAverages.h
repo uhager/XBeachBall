@@ -7,29 +7,23 @@
 
 #include <X11/Xlib.h>
 
-#include "XDisplayBase.h"
+#include "XWindowObject.h"
 
 #define PI 3.14159265
 
-class XDisplayBase;
 class Data;
 
-class XDrawAverages {
+class XDrawAverages : public XWindowObject
+{
  public:
-  XDrawAverages(std::shared_ptr<XDisplayBase> display_base, unsigned int nsectors = 8, unsigned int ave_over = 100);
-  ~XDrawAverages();
-  void update(const Data& data);
+  XDrawAverages(std::string name, std::shared_ptr<XDisplayBase> disp_base, unsigned int width, unsigned int height, unsigned int n_contexts = 8);
 
+  void update(const Data& data) override;
+  void average_over(unsigned int num){ average_over_ = num;}
 
  private:
-  void open_window();
-
-  std::shared_ptr<XDisplayBase> display_base;
   unsigned int n_sectors_;
-  unsigned int average_over_;
-  Window window_;
-  std::vector<GC> sector_context;
-  XWindowAttributes window_attributes_;
+  unsigned int average_over_ = 100;
   std::vector<double> sums_;
   std::vector< std::deque<double> > values_;
 };
