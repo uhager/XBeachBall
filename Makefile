@@ -23,4 +23,4 @@ BeachBall: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o $@
 
 clean:
-	rm -f *.o  $(OBJS) 
+	rm -f *.o  $(OBJS) BeachBall

@@ -17,28 +17,43 @@ std::condition_variable gread_finished;
 
 
 
-void producer(unsigned int sectors, Data& data)
+void producer(Data& data, unsigned int sectors, unsigned int wait_ms, unsigned int nthreads)
 {
 #ifdef DEBUG
-      std::cout << "[producer] initial data = " << data.sector << std::endl;
+  std::cout << "[producer] initial data = " << data.sector << std::endl;
 #endif  // DEBUG
+  std::mutex m;
   std::default_random_engine generator;
   std::uniform_int_distribution<int> dist_int(0, sectors-1);
   std::normal_distribution<double> dist_norm(500,100);
+  std::this_thread::sleep_for(std::chrono::milliseconds(80));  // make sure consumers are ready
   while (true) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(80));  // slow down data generation a bit
-    {  // The class lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for owning a mutex for the duration of a scoped block. -> {}
-      std::lock_guard<std::mutex> lock(mex);
-      data.sector = dist_int(generator);
-      data.energy = dist_norm(generator);
+    // {  The class lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for owning a mutex for the duration of a scoped block. -> {}
+    //	std::lock_guard<std::mutex> lock(mex);
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));  // slow down data generation a bit
+    std::unique_lock<std::mutex> lock(mex);
 #ifdef DEBUG
-      std::cout << "[producer] data = " << data.sector << std::endl;
+    std::cout << "[producer] has lock" << std::endl;
+#endif  // DEBUG
+    data.sector = dist_int(generator);
+    data.energy = dist_norm(generator);
+#ifdef DEBUG
+    std::cout << "[producer] data = " << data.sector << ", " << data.energy << std::endl;
+#endif  // DEBUG
+#ifdef DEBUG
+    std::cout << "[producer] notified all"  << std::endl;
+#endif  // DEBUG
+
+    for ( unsigned int i = 0; i < nthreads; ++i ){
+      gdata_available.notify_one();
+      gread_finished.wait(lock);
+#ifdef DEBUG
+      std::cout << "[producer] got notified" << std::endl;
 #endif  // DEBUG
     }
-    gdata_available.notify_all();
-    //    gread_finished.wait();
   }
 }
+
 
 
 
@@ -49,7 +64,11 @@ void calculate_averages(XDrawAverages& draw_ave, const Data& data)
 #endif  // DEBUG
   while (true) {
     std::unique_lock<std::mutex> lock(mex);
+    //    gdata_available.wait(lock, [data] {return data.has_data;} );
     gdata_available.wait(lock);
+#ifdef DEBUG
+      std::cout << "[calculate_averages] got lock; data: " << data.sector << ", " << data.energy << std::endl;
+#endif  // DEBUG
     draw_ave.update(data);
     gread_finished.notify_one();
   }
@@ -66,7 +85,7 @@ void fill_chart(XBeachBall& beach_ball, const Data& data)
     std::unique_lock<std::mutex> lock(mex);
     gdata_available.wait(lock);
 #ifdef DEBUG
-      std::cout << "[fill_chart] data = " << data.sector << std::endl;
+      std::cout << "[fill_chart] got lock; data: " << data.sector << ", " << data.energy << std::endl;
 #endif  // DEBUG
     beach_ball.update(data);
     gread_finished.notify_one();
@@ -80,13 +99,16 @@ void fill_chart(XBeachBall& beach_ball, const Data& data)
 int main()
 {
   unsigned int sectors = 8;
+  unsigned int nthreads = 2;
+  unsigned int wait_ms = 30;  // how long the producer waits before producing data.
+  
   std::shared_ptr<XDisplayBase>display_base = std::make_shared<XDisplayBase>();
-  XBeachBall beach_ball("Beachball",display_base, 300, 300, sectors);
-  beach_ball.set_step_size(3);
-  XDrawAverages averages("Average Energies",display_base, 300, 200, sectors);
+  XBeachBall beach_ball("Beachball", display_base, 300, 300, sectors);
+  beach_ball.set_step_size(2);
+  XDrawAverages averages("Average Energies", display_base, 150, 200, sectors);
   Data data;
 
-  std::thread t1( producer, sectors, std::ref(data) );
+  std::thread t1( producer, std::ref(data), sectors, wait_ms, nthreads );
   std::thread t2( fill_chart, std::ref(beach_ball), std::cref(data));
   std::thread t3( calculate_averages, std::ref(averages), std::cref(data));
 

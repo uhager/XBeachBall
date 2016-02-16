@@ -46,7 +46,7 @@ XDrawAverages::update(const Data& data) {
     double average = sums_.at(i) / values_.at(i).size();
     int height_i = height() / n_sectors_;
     std::string out_string = "sector " + std::to_string(i) + ": " + std::to_string(average);
-    XDrawString ( display(), window(), context(i), 0, height_i * i, out_string.c_str(), out_string.size() );
+    XDrawString ( display(), window(), context(i), 0, height_i * (i+0.5), out_string.c_str(), out_string.size() );
   }
   XFlush(display());
 }
