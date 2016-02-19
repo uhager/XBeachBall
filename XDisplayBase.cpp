@@ -11,6 +11,7 @@
 
 
 XDisplayBase::XDisplayBase() {
+  XInitThreads();
   xDisplay = XOpenDisplay (0);
   if ( !xDisplay )
     throw std::runtime_error("[XDisplayBase] Error: Couldn't open display.");

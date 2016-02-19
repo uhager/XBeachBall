@@ -42,6 +42,7 @@ XDrawAverages::update(const Data& data) {
     values.pop_front();
   }
   
+  XLockDisplay(display());
   for ( unsigned int i = 0; i < n_sectors_; ++i ) {
     double average = sums_.at(i) / values_.at(i).size();
     int height_i = height() / n_sectors_;
@@ -49,6 +50,7 @@ XDrawAverages::update(const Data& data) {
     XDrawString ( display(), window(), context(i), 0, height_i * (i+0.5), out_string.c_str(), out_string.size() );
   }
   XFlush(display());
+  XUnlockDisplay(display());
 }
 
 

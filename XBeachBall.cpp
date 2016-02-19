@@ -46,11 +46,12 @@ XBeachBall::update(const Data& data) {
   check_size(sector_count[sector]);
 
   sector_count[sector] += step_size_;
-  
+  XLockDisplay(display());
   for ( unsigned int i = 0; i < n_sectors_; ++i ) {
     XFillArc(display(), window(), context(i), width()/2-sector_count[i], width()/2-sector_count[i], 2*sector_count[i], 2*sector_count[i], 64*(90+i*360/n_sectors_), 360/n_sectors_*64);
   }
   XFlush(display());
+  XUnlockDisplay(display());
 }
 
 
