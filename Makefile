@@ -7,7 +7,7 @@ DEBUG_FLAGS = -g -DDEBUG
 
 LIBS = -lX11 -pthread
 
-OBJS = XDisplayBase.o XWindowObject.o XBeachBall.o XDrawAverages.o BeachBall.o
+OBJS = XDisplayBase.o XWindowObject.o XBeachBall.o XDrawAverages.o XDrawTracks.o BeachBall.o
 
 all: $(OBJS) BeachBall
 

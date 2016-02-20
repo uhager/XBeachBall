@@ -27,6 +27,9 @@ XDrawAverages::update(const Data& data) {
 #ifdef DEBUG
   std::cout << "[XDrawAverages::update] " << data.sector << " - " << data.energy << std::endl;
 #endif // DEBUG
+
+  if (data.sector > n_sectors_ )
+    return;
   
   XWindowObject::update(data);
 
@@ -51,6 +54,9 @@ XDrawAverages::update(const Data& data) {
   }
   XFlush(display());
   XUnlockDisplay(display());
+#ifdef DEBUG
+  std::cout << "[XDrawAverages::update] finished" << std::endl;
+#endif // DEBUG
 }
 
 

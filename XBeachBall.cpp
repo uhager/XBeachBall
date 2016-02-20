@@ -23,7 +23,8 @@ XBeachBall::XBeachBall(std::string name, std::shared_ptr<XDisplayBase> disp_base
 
 
 void
-XBeachBall::zero_sectors(){
+XBeachBall::zero_sectors()
+{
   sector_count.clear();
   for (unsigned int i =0; i < n_sectors_; i++)
     sector_count.push_back(0);
@@ -31,15 +32,22 @@ XBeachBall::zero_sectors(){
 
 
 void
-XBeachBall::check_size(unsigned int counts){
+XBeachBall::check_size(unsigned int counts)
+{
   if (counts >= width()/2) zero_sectors();
 }
 
 
 
 void
-XBeachBall::update(const Data& data) {
-  //  std::cout << "[XBeachBall::increase_sector]" << std::endl;
+XBeachBall::update(const Data& data)
+{
+#ifdef DEBUG
+  std::cout << "[XBeachBall::update] " << data.sector << " - " << data.energy << std::endl;
+#endif // DEBUG
+  if (data.sector > n_sectors_ )
+    return;
+
   XWindowObject::update(data);
   
   const unsigned int& sector = data.sector;
@@ -52,6 +60,10 @@ XBeachBall::update(const Data& data) {
   }
   XFlush(display());
   XUnlockDisplay(display());
+  
+#ifdef DEBUG
+  std::cout << "[XBeachBall::update] finished" << std::endl;
+#endif // DEBUG
 }
 
 

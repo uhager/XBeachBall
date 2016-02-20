@@ -2,12 +2,14 @@
 #define DATA_H
 
 #include <mutex>
+#include <vector>
 
 struct Data
 {
-  int sector = 0;
+  unsigned int sector = 0;
   double energy = 0.0;
-  bool has_data = false;
+  unsigned int position = 0;
+  std::vector<std::pair<double,double>> track;
 };
 
 
